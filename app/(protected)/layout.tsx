@@ -20,9 +20,12 @@ export default async function ProtectedLayout({ children }: { children: React.Re
     <div className="min-h-screen bg-slate-50">
       <header className="sticky top-0 z-30 border-b bg-white/95 px-6 py-4 backdrop-blur">
         <div className="mx-auto flex max-w-7xl items-center justify-between gap-4">
-          <div>
-            <p className="text-lg font-semibold tracking-tight">EMS Praxe — administrace</p>
-            <p className="text-sm text-slate-600">{session.user.name} · {session.user.role}</p>
+          <div className="flex items-center gap-3">
+            {session.user.discordAvatar ? <img src={session.user.discordAvatar} alt={session.user.name ?? 'avatar'} className="h-10 w-10 rounded-full" /> : <div className="h-10 w-10 rounded-full bg-slate-200" />}
+            <div>
+              <p className="text-lg font-semibold tracking-tight">EMS Praxe — administrace</p>
+              <p className="text-sm text-slate-600">{session.user.discordGlobalName ?? session.user.name} · {session.user.role} · {session.user.authProvider}</p>
+            </div>
           </div>
           <a href="/api/auth/signout" className="rounded-md border border-slate-300 bg-white px-3 py-1.5 text-sm hover:bg-slate-50">Odhlásit</a>
         </div>
