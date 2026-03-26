@@ -4,6 +4,7 @@ import { requireSession } from '@/lib/auth/session';
 import { prisma } from '@/lib/prisma';
 import {
   adjustPracticeRequirement,
+  approvePendingUser,
   disconnectDiscordAccount,
   forcePasswordResetNextLogin,
   setTemporaryPassword,
@@ -56,6 +57,18 @@ export default async function UserDetailPage({ params }: { params: Promise<{ id:
         <p className="font-medium">Stav účtu</p>
         <button className="rounded border px-3 py-1">{user.active ? 'Deaktivovat účet' : 'Aktivovat účet'}</button>
       </form>
+
+      {!user.active && <form action={approvePendingUser} className="space-y-2">
+        <input type="hidden" name="userId" value={user.id} />
+        <p className="font-medium">Rychlé schválení pending účtu</p>
+        <select name="role" defaultValue={user.role} className="w-full rounded border px-2 py-1">
+          <option value="TRAINEE">TRAINEE</option>
+          <option value="TRAINING_OFFICER">TRAINING_OFFICER</option>
+          <option value="COMMAND_STAFF">COMMAND_STAFF</option>
+          <option value="ADMIN">ADMIN</option>
+        </select>
+        <button className="rounded border px-3 py-1">Aktivovat + nastavit roli</button>
+      </form>}
 
       <form action={setTemporaryPassword} className="space-y-2">
         <input type="hidden" name="userId" value={user.id} />

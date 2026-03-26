@@ -87,6 +87,20 @@ export async function disconnectDiscordAccount(formData: FormData) {
   revalidatePath(`/users/${userId}`);
 }
 
+
+export async function approvePendingUser(formData: FormData) {
+  const session = await requireAdmin();
+  const userId = String(formData.get('userId'));
+  const role = String(formData.get('role')) as Role;
+  const user = await prisma.user.findUnique({ where: { id: userId } });
+  if (!user) throw new Error('Uživatel nenalezen.');
+
+  await prisma.user.update({ where: { id: userId }, data: { active: true, role } });
+  await logAudit(session.user.id, 'User', userId, 'PENDING_APPROVED', { active: user.active, role: user.role }, { active: true, role });
+  revalidatePath('/users');
+  revalidatePath(`/users/${userId}`);
+}
+
 export async function adjustPracticeRequirement(formData: FormData) {
   const session = await requireAdmin();
   const userId = String(formData.get('userId'));

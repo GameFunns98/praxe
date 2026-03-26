@@ -35,7 +35,11 @@ export const authOptions: NextAuthOptions = {
         const user = await prisma.user.findUnique({ where: { email: credentials.email } });
         if (!user || !user.active || !user.isSuperadmin) return null;
         const ok = await bcrypt.compare(credentials.password, user.passwordHash);
-        if (!ok || user.forcePasswordReset) return null;
+        if (!ok) return null;
+
+        if (user.forcePasswordReset) {
+          console.warn(`[Auth] Superadmin ${user.email} has forcePasswordReset=true; allowing fallback login to prevent lockout.`);
+        }
 
         await prisma.user.update({
           where: { id: user.id },
@@ -68,11 +72,17 @@ export const authOptions: NextAuthOptions = {
       const email = discordProfile.email?.toLowerCase();
       const discordUserId = discordProfile.id;
 
-      if (!email) return '/login?error=DiscordEmailMissing';
+      if (!email) {
+        console.warn('[Auth] Discord login failed: missing email in profile', { discordUserId });
+        return '/login?error=DiscordEmailMissing';
+      }
 
       const existingByDiscord = await prisma.user.findUnique({ where: { discordUserId } });
       if (existingByDiscord) {
-        if (!existingByDiscord.active) return '/login?error=AccountDisabled';
+        if (!existingByDiscord.active) {
+          console.info('[Auth] Discord login blocked: account disabled', { userId: existingByDiscord.id });
+          return '/login?error=AccountDisabled';
+        }
         await prisma.user.update({
           where: { id: existingByDiscord.id },
           data: {
@@ -88,7 +98,10 @@ export const authOptions: NextAuthOptions = {
 
       const existingByEmail = await prisma.user.findUnique({ where: { email } });
       if (existingByEmail) {
-        if (!existingByEmail.active) return '/login?error=AccountDisabled';
+        if (!existingByEmail.active) {
+          console.info('[Auth] Discord login blocked after email link: account disabled', { userId: existingByEmail.id });
+          return '/login?error=AccountDisabled';
+        }
         await prisma.user.update({
           where: { id: existingByEmail.id },
           data: {
@@ -120,6 +133,7 @@ export const authOptions: NextAuthOptions = {
         }
       });
 
+      console.info('[Auth] Discord login created pending user awaiting activation', { email, discordUserId });
       return '/login?error=AwaitingApproval';
     },
     async jwt({ token, user, account }) {
