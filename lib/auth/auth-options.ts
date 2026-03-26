@@ -123,32 +123,28 @@ export const authOptions: NextAuthOptions = {
       return '/login?error=AwaitingApproval';
     },
     async jwt({ token, user, account }) {
-      if (account?.provider === 'discord' || user) {
-        const dbUser = token.sub ? await prisma.user.findUnique({ where: { id: token.sub } }) : null;
-        if (dbUser) {
-          token.role = dbUser.role as Role;
-          token.sub = dbUser.id;
-          token.authProvider = dbUser.authProvider;
-          token.forcePasswordReset = dbUser.forcePasswordReset;
-          token.discordAvatar = dbUser.discordAvatar;
-          token.discordGlobalName = dbUser.discordGlobalName;
-        }
+      if (user?.id) {
+        token.sub = user.id;
+      }
+
+      let dbUser = null;
+      if (account?.provider === 'discord' && account.providerAccountId) {
+        dbUser = await prisma.user.findUnique({ where: { discordUserId: account.providerAccountId } });
+      } else if (token.sub) {
+        dbUser = await prisma.user.findUnique({ where: { id: token.sub } });
+      }
+
+      if (dbUser) {
+        token.sub = dbUser.id;
+        token.role = dbUser.role as Role;
+        token.authProvider = dbUser.authProvider;
+        token.forcePasswordReset = dbUser.forcePasswordReset;
+        token.discordAvatar = dbUser.discordAvatar;
+        token.discordGlobalName = dbUser.discordGlobalName;
       }
 
       if (account?.provider === 'discord' && account.access_token) {
         token.discordAccessToken = account.access_token;
-      }
-
-      if (user && !token.sub) {
-        token.sub = user.id;
-      }
-
-      if (user && (user as any).role) {
-        token.role = (user as any).role;
-        token.authProvider = (user as any).authProvider;
-        token.forcePasswordReset = (user as any).forcePasswordReset;
-        token.discordAvatar = (user as any).discordAvatar;
-        token.discordGlobalName = (user as any).discordGlobalName;
       }
 
       return token;
