@@ -1,0 +1,110 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  ADMIN
+  COMMAND_STAFF
+  TRAINING_OFFICER
+  TRAINEE
+}
+
+enum PracticeStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  LATE_PENDING
+  LATE_APPROVED
+  CANCELLED
+}
+
+enum NoteType {
+  EXCUSE
+  WARNING
+  SANCTION
+  INTERNAL_NOTE
+}
+
+model User {
+  id                           String              @id @default(cuid())
+  fullName                     String
+  callsign                     String
+  rankTitle                    String
+  email                        String              @unique
+  passwordHash                 String
+  role                         Role
+  active                       Boolean             @default(true)
+  createdAt                    DateTime            @default(now())
+  updatedAt                    DateTime            @updatedAt
+  practiceRequirement          PracticeRequirement?
+  traineePracticeRecords       PracticeRecord[]    @relation("TraineeRecords")
+  supervisedPracticeRecords    PracticeRecord[]    @relation("SupervisorRecords")
+  createdNotes                 ExcuseOrNote[]      @relation("CreatedBy")
+  notesForUser                 ExcuseOrNote[]      @relation("NotesForUser")
+  auditLogsAsActor             AuditLog[]          @relation("ActorUser")
+}
+
+model PracticeRequirement {
+  id               String   @id @default(cuid())
+  userId           String   @unique
+  requiredMinutes  Int      @default(900)
+  remainingMinutes Int      @default(900)
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+  user             User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model PracticeRecord {
+  id                         String         @id @default(cuid())
+  traineeId                  String
+  supervisorId               String
+  startAt                    DateTime
+  endAt                      DateTime
+  durationMinutes            Int
+  submittedAt                DateTime       @default(now())
+  submittedWithinOneHour     Boolean
+  status                     PracticeStatus
+  traineeSignature           String
+  supervisorSignature        String?
+  supervisorComment          String?
+  adminNote                  String?
+  deductedMinutes            Int            @default(0)
+  createdAt                  DateTime       @default(now())
+  updatedAt                  DateTime       @updatedAt
+  trainee                    User           @relation("TraineeRecords", fields: [traineeId], references: [id])
+  supervisor                 User           @relation("SupervisorRecords", fields: [supervisorId], references: [id])
+
+  @@index([traineeId, startAt, endAt])
+  @@index([supervisorId, status])
+}
+
+model ExcuseOrNote {
+  id        String   @id @default(cuid())
+  userId    String
+  type      NoteType
+  title     String
+  content   String
+  createdBy String
+  createdAt DateTime @default(now())
+  user      User     @relation("NotesForUser", fields: [userId], references: [id], onDelete: Cascade)
+  creator   User     @relation("CreatedBy", fields: [createdBy], references: [id], onDelete: Cascade)
+}
+
+model AuditLog {
+  id         String   @id @default(cuid())
+  actorUserId String?
+  entityType String
+  entityId   String
+  action     String
+  beforeJson Json?
+  afterJson  Json?
+  createdAt  DateTime @default(now())
+  actor      User?    @relation("ActorUser", fields: [actorUserId], references: [id], onDelete: SetNull)
+
+  @@index([entityType, entityId])
+}
