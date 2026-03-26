@@ -11,31 +11,44 @@ async function main() {
   await prisma.excuseOrNote.deleteMany();
   await prisma.practiceRecord.deleteMany();
   await prisma.practiceRequirement.deleteMany();
+  await prisma.discordSettings.deleteMany();
   await prisma.user.deleteMany();
 
-  const admin = await prisma.user.create({
+  await prisma.user.create({
     data: {
-      fullName: 'Jan Novák', callsign: 'ADMIN-1', rankTitle: 'Admin', email: 'admin@ems.local', passwordHash, role: Role.ADMIN
+      fullName: 'Jan Novák',
+      callsign: 'ADMIN-1',
+      rankTitle: 'Superadmin',
+      email: 'admin@ems.local',
+      passwordHash,
+      role: Role.ADMIN,
+      isSuperadmin: true,
+      authProvider: 'LOCAL'
     }
   });
 
   const officers = await Promise.all([
-    prisma.user.create({ data: { fullName: 'Petr Dvořák', callsign: 'TO-101', rankTitle: 'Training Officer', email: 'to1@ems.local', passwordHash, role: Role.TRAINING_OFFICER } }),
-    prisma.user.create({ data: { fullName: 'Lucie Svobodová', callsign: 'TO-102', rankTitle: 'Training Officer', email: 'to2@ems.local', passwordHash, role: Role.TRAINING_OFFICER } })
+    prisma.user.create({ data: { fullName: 'Petr Dvořák', callsign: 'TO-101', rankTitle: 'Training Officer', email: 'to1@ems.local', passwordHash, role: Role.TRAINING_OFFICER, authProvider: 'DISCORD' } }),
+    prisma.user.create({ data: { fullName: 'Lucie Svobodová', callsign: 'TO-102', rankTitle: 'Training Officer', email: 'to2@ems.local', passwordHash, role: Role.TRAINING_OFFICER, authProvider: 'DISCORD' } })
   ]);
 
-  await prisma.user.create({ data: { fullName: 'Karel Velitel', callsign: 'CS-1', rankTitle: 'Command Staff', email: 'command@ems.local', passwordHash, role: Role.COMMAND_STAFF } });
+  await prisma.user.create({ data: { fullName: 'Karel Velitel', callsign: 'CS-1', rankTitle: 'Command Staff', email: 'command@ems.local', passwordHash, role: Role.COMMAND_STAFF, authProvider: 'DISCORD' } });
 
-  const trainees = await Promise.all(Array.from({ length: 5 }, (_, i) => prisma.user.create({
-    data: {
-      fullName: `Trainee ${i + 1}`,
-      callsign: `TR-${i + 1}`,
-      rankTitle: 'Nováček',
-      email: `trainee${i + 1}@ems.local`,
-      passwordHash,
-      role: Role.TRAINEE
-    }
-  })));
+  const trainees = await Promise.all(
+    Array.from({ length: 5 }, (_, i) =>
+      prisma.user.create({
+        data: {
+          fullName: `Trainee ${i + 1}`,
+          callsign: `TR-${i + 1}`,
+          rankTitle: 'Nováček',
+          email: `trainee${i + 1}@ems.local`,
+          passwordHash,
+          role: Role.TRAINEE,
+          authProvider: 'DISCORD'
+        }
+      })
+    )
+  );
 
   await prisma.practiceRequirement.createMany({
     data: trainees.map((t) => ({ userId: t.id, requiredMinutes: 900, remainingMinutes: 900 }))
@@ -81,7 +94,7 @@ async function main() {
 
   console.log('Seed completed');
   console.log('Demo password:', process.env.DEMO_PASSWORD ?? 'Demo1234!');
-  console.log('Admin: admin@ems.local');
+  console.log('Superadmin local fallback: admin@ems.local');
 }
 
 main().finally(() => prisma.$disconnect());
