@@ -32,5 +32,8 @@ CREATE UNIQUE INDEX "User_discordUserId_key" ON "User"("discordUserId");
 
 -- Seed/auth defaults for existing users
 UPDATE "User"
-SET "authProvider" = CASE WHEN "role" = 'ADMIN' THEN 'LOCAL' ELSE 'DISCORD' END,
-    "isSuperadmin" = CASE WHEN "role" = 'ADMIN' THEN true ELSE false END;
+SET "authProvider" = CASE
+  WHEN "role" = 'ADMIN' THEN 'LOCAL'::"AuthProvider"
+  ELSE 'DISCORD'::"AuthProvider"
+END,
+"isSuperadmin" = CASE WHEN "role" = 'ADMIN' THEN true ELSE false END;
