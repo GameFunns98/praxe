@@ -2,7 +2,8 @@ import { Card } from '@/components/ui/card';
 import { requireSession } from '@/lib/auth/session';
 import { prisma } from '@/lib/prisma';
 import { formatMinutes } from '@/lib/utils';
-import { Roles, type Role } from '@/lib/auth/roles';
+import { Roles } from '@/lib/auth/roles';
+import { getPracticeStatusLabel } from '@/lib/practice-status';
 
 export default async function DashboardPage() {
   const session = await requireSession();
@@ -13,11 +14,11 @@ export default async function DashboardPage() {
     const approved = await prisma.practiceRecord.aggregate({ where: { traineeId: session.user.id, status: { in: ['APPROVED', 'LATE_APPROVED'] } }, _sum: { deductedMinutes: true } });
     const recent = await prisma.practiceRecord.findMany({ where: { traineeId: session.user.id }, orderBy: { createdAt: 'desc' }, take: 5, include: { supervisor: true } });
 
-    return <div className="grid gap-4">
-      <Card><h2 className="font-semibold">Trainee dashboard</h2><p>Zbývá: {formatMinutes(req?.remainingMinutes ?? 0)}</p><p>Schváleno: {formatMinutes(approved._sum.deductedMinutes ?? 0)}</p></Card>
-      <Card><p>Každý nový člen má 15 hodin praxí.</p><p>Praxe můžete vykonávat pouze s Training Officer.</p></Card>
-      <Card><h3 className="font-semibold">Poslední zápisy</h3>{recent.map((r: any) => <p key={r.id}>{r.status} - {r.supervisor.fullName}</p>)}</Card>
-      <Card><h3 className="font-semibold">Statistiky stavů</h3>{stats.map((s: any) => <p key={s.status}>{s.status}: {s._count.status}</p>)}</Card>
+    return <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+      <Card><p className="text-sm text-slate-500">Zbývající čas</p><p className="text-2xl font-semibold">{formatMinutes(req?.remainingMinutes ?? 0)}</p></Card>
+      <Card><p className="text-sm text-slate-500">Celkem schváleno</p><p className="text-2xl font-semibold">{formatMinutes(approved._sum.deductedMinutes ?? 0)}</p></Card>
+      <Card className="md:col-span-2"><h3 className="font-semibold">Poslední zápisy</h3>{recent.length === 0 ? <p className="text-sm text-slate-500">Bez záznamů.</p> : recent.map((r) => <p key={r.id} className="text-sm">{getPracticeStatusLabel(r.status)} · {r.supervisor.fullName}</p>)}</Card>
+      <Card className="md:col-span-2 xl:col-span-4"><h3 className="font-semibold">Statistiky stavů</h3><div className="mt-2 grid gap-2 md:grid-cols-3">{stats.map((s) => <p key={s.status} className="rounded-md bg-slate-50 p-2 text-sm">{getPracticeStatusLabel(s.status)}: <strong>{s._count.status}</strong></p>)}</div></Card>
     </div>;
   }
 
@@ -26,7 +27,9 @@ export default async function DashboardPage() {
     const approvedToday = await prisma.practiceRecord.count({ where: { supervisorId: session.user.id, status: { in: ['APPROVED', 'LATE_APPROVED'] } } });
     const rejectedToday = await prisma.practiceRecord.count({ where: { supervisorId: session.user.id, status: 'REJECTED' } });
     return <div className="grid gap-4 md:grid-cols-3">
-      <Card>Čeká na potvrzení: {pending}</Card><Card>Schváleno: {approvedToday}</Card><Card>Zamítnuto: {rejectedToday}</Card>
+      <Card><p className="text-sm text-slate-500">Čeká na potvrzení</p><p className="text-3xl font-semibold">{pending}</p></Card>
+      <Card><p className="text-sm text-slate-500">Schváleno</p><p className="text-3xl font-semibold">{approvedToday}</p></Card>
+      <Card><p className="text-sm text-slate-500">Zamítnuto</p><p className="text-3xl font-semibold">{rejectedToday}</p></Card>
     </div>;
   }
 
@@ -35,10 +38,10 @@ export default async function DashboardPage() {
   const pending = await prisma.practiceRecord.count({ where: { status: { in: ['PENDING', 'LATE_PENDING'] } } });
   const sanctions = await prisma.excuseOrNote.count({ where: { type: 'SANCTION' } });
 
-  return <div className="grid gap-4 md:grid-cols-4">
-    <Card>Celkem trainee: {totalTrainees}</Card>
-    <Card>Čekající schválení: {pending}</Card>
-    <Card>Pozdní zápisy: {late}</Card>
-    <Card>Sankce: {sanctions}</Card>
+  return <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+    <Card><p className="text-sm text-slate-500">Celkem trainee</p><p className="text-3xl font-semibold">{totalTrainees}</p></Card>
+    <Card><p className="text-sm text-slate-500">Čekající schválení</p><p className="text-3xl font-semibold">{pending}</p></Card>
+    <Card><p className="text-sm text-slate-500">Pozdní zápisy</p><p className="text-3xl font-semibold">{late}</p></Card>
+    <Card><p className="text-sm text-slate-500">Sankce</p><p className="text-3xl font-semibold">{sanctions}</p></Card>
   </div>;
 }

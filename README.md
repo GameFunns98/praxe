@@ -145,3 +145,22 @@ Použit je NextAuth credentials provider.
 - command@ems.local (COMMAND_STAFF)
 - trainee1@ems.local až trainee5@ems.local (TRAINEE)
 - Výchozí heslo: `Demo1234!`
+
+## Discord notifikace (schválení / zamítnutí)
+Aplikace podporuje server-side odesílání webhook notifikací do Discordu po schválení nebo zamítnutí praxe.
+
+### Nastavení
+1. Na Discord kanálu vytvořte webhook: **Nastavení kanálu → Integrace → Webhooky**.
+2. Přidejte URL do `.env`:
+   ```env
+   DISCORD_WEBHOOK_URL="https://discord.com/api/webhooks/..."
+   ```
+3. Restartujte aplikaci.
+
+### Chování při chybě
+- Pokud `DISCORD_WEBHOOK_URL` není nastavené, systém notifikaci přeskočí a schvalovací flow pokračuje bez chyby.
+- Úspěch/chyba odeslání se zapisuje do server logu.
+
+### Struktura zpráv
+- **Schválení:** trainee, dohlížející, začátek/konec, délka, zbývající praxe, finální status, podpis dohlížejícího.
+- **Zamítnutí:** trainee, dohlížející, začátek/konec, délka, finální status, důvod zamítnutí.
