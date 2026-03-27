@@ -89,7 +89,8 @@ export async function approvePracticeRecord(formData: FormData) {
   try {
     const notified = await notifyPracticeApproved(
       { ...record, status: nextStatus, supervisorSignature: parsed.supervisorSignature, supervisorComment: parsed.supervisorComment ?? null },
-      nextRemaining
+      nextRemaining,
+      session.user.id
     );
     console.info(`[Discord] Schválení záznamu ${record.id}: ${notified ? 'odesláno' : 'přeskočeno'}`);
   } catch (error) {
@@ -115,7 +116,7 @@ export async function rejectPracticeRecord(formData: FormData) {
   await logAudit(session.user.id, 'PracticeRecord', record.id, 'REJECT', record, { status: 'REJECTED', supervisorComment: parsed.supervisorComment });
 
   try {
-    const notified = await notifyPracticeRejected({ ...record, status: 'REJECTED', supervisorComment: parsed.supervisorComment });
+    const notified = await notifyPracticeRejected({ ...record, status: 'REJECTED', supervisorComment: parsed.supervisorComment }, session.user.id);
     console.info(`[Discord] Zamítnutí záznamu ${record.id}: ${notified ? 'odesláno' : 'přeskočeno'}`);
   } catch (error) {
     console.error('[Discord] Chyba při odeslání zamítací notifikace', error);
