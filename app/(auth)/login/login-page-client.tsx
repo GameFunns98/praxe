@@ -31,9 +31,20 @@ export function LoginPageClient({ callbackError }: { callbackError?: string }) {
   }
 
   return (
-    <main className="mx-auto mt-16 max-w-md rounded-lg border bg-white p-6 space-y-4">
-      <h1 className="text-2xl font-semibold">Systém zápisu praxí</h1>
-      <p className="text-sm">Primární přihlášení běží přes Discord. Pokud účet není aktivní, požádejte administrátora o schválení.</p>
+    <main className="mx-auto mt-16 max-w-lg rounded-xl border bg-white p-6 shadow-sm space-y-5">
+      <header className="space-y-2">
+        <h1 className="text-2xl font-semibold">Systém zápisu praxí</h1>
+        <p className="text-sm text-slate-600">Primární přihlášení je přes Discord. Účty bez aktivace adminem se nepustí dál.</p>
+      </header>
+
+      <section className="rounded-lg border border-blue-200 bg-blue-50 p-3 text-sm text-blue-900">
+        <p className="font-medium">Doporučený postup</p>
+        <ol className="ml-5 mt-1 list-decimal space-y-1 text-xs">
+          <li>Klikněte na „Přihlásit se přes Discord“.</li>
+          <li>Pokud účet čeká na schválení, kontaktujte administrátora.</li>
+          <li>Nouzový local login používejte pouze jako superadmin fallback.</li>
+        </ol>
+      </section>
 
       <Button type="button" className="w-full" onClick={() => signIn('discord', { callbackUrl: '/dashboard' })}>
         Přihlásit se přes Discord

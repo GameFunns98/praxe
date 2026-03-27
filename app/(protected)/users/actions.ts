@@ -15,6 +15,35 @@ async function requireAdmin() {
   return session;
 }
 
+
+export async function updateUserProfile(formData: FormData) {
+  const session = await requireAdmin();
+  const userId = String(formData.get('userId'));
+  const user = await prisma.user.findUnique({ where: { id: userId } });
+  if (!user) throw new Error('Uživatel nenalezen.');
+
+  const payload = {
+    fullName: String(formData.get('fullName') ?? '').trim(),
+    callsign: String(formData.get('callsign') ?? '').trim(),
+    rankTitle: String(formData.get('rankTitle') ?? '').trim(),
+    email: String(formData.get('email') ?? '').trim().toLowerCase(),
+    role: String(formData.get('role') ?? user.role) as Role,
+    active: String(formData.get('active')) === 'true',
+    authProvider: String(formData.get('authProvider') ?? user.authProvider) as 'LOCAL' | 'DISCORD' | 'HYBRID',
+    discordUsername: String(formData.get('discordUsername') ?? '').trim() || null,
+    discordGlobalName: String(formData.get('discordGlobalName') ?? '').trim() || null
+  };
+
+  if (!payload.fullName || !payload.callsign || !payload.rankTitle || !payload.email) {
+    throw new Error('Jméno, callsign, hodnost a email jsou povinné.');
+  }
+
+  await prisma.user.update({ where: { id: userId }, data: payload });
+  await logAudit(session.user.id, 'User', userId, 'PROFILE_UPDATE', user, payload);
+  revalidatePath('/users');
+  revalidatePath(`/users/${userId}`);
+}
+
 export async function updateUserRole(formData: FormData) {
   const session = await requireAdmin();
   const userId = String(formData.get('userId'));

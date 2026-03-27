@@ -66,13 +66,19 @@ export default async function SettingsPage({ searchParams }: { searchParams: Pro
 
     <section className="max-w-3xl space-y-2 rounded-xl border bg-white p-4">
       <h2 className="font-semibold">Stav Discord integrace</h2>
-      <p className="text-sm">Primární bot režim: <strong>{health.primaryReady ? 'Připraveno' : 'Není kompletně nastaveno'}</strong></p>
-      <p className="text-sm">Fallback webhook: <strong>{health.fallbackReady ? 'Připraveno' : 'Nenastaveno'}</strong></p>
-      <ul className="list-disc ml-5 text-xs text-slate-600">
-        <li>Bot token: {health.hasBotToken ? 'OK' : 'chybí'}</li>
-        <li>Guild: {health.hasGuild ? 'OK' : 'chybí'}</li>
-        <li>Approval channel: {health.hasApprovalChannel ? 'OK' : 'chybí'}</li>
-        <li>Rejection channel: {health.hasRejectionChannel ? 'OK' : 'chybí'}</li>
+      <div className="flex flex-wrap gap-2 text-xs">
+        <span className={`rounded-full px-3 py-1 ${health.primaryReady ? 'bg-green-100 text-green-800' : 'bg-amber-100 text-amber-800'}`}>
+          Primární bot: {health.primaryReady ? 'Připraveno' : 'Nekompletní'}
+        </span>
+        <span className={`rounded-full px-3 py-1 ${health.fallbackReady ? 'bg-blue-100 text-blue-800' : 'bg-slate-100 text-slate-700'}`}>
+          Webhook fallback: {health.fallbackReady ? 'Připraveno' : 'Nenastaveno'}
+        </span>
+      </div>
+      <ul className="grid gap-1 text-xs text-slate-600 sm:grid-cols-2">
+        <li>Bot token: {health.hasBotToken ? '✅ OK' : '⚠️ chybí'}</li>
+        <li>Guild: {health.hasGuild ? '✅ OK' : '⚠️ chybí'}</li>
+        <li>Approval channel: {health.hasApprovalChannel ? '✅ OK' : '⚠️ chybí'}</li>
+        <li>Rejection channel: {health.hasRejectionChannel ? '✅ OK' : '⚠️ chybí'}</li>
       </ul>
     </section>
 
