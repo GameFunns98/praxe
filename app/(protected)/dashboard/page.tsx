@@ -17,8 +17,8 @@ export default async function DashboardPage() {
     return <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
       <Card><p className="text-sm text-slate-500">Zbývající čas</p><p className="text-2xl font-semibold">{formatMinutes(req?.remainingMinutes ?? 0)}</p></Card>
       <Card><p className="text-sm text-slate-500">Celkem schváleno</p><p className="text-2xl font-semibold">{formatMinutes(approved._sum.deductedMinutes ?? 0)}</p></Card>
-      <Card className="md:col-span-2"><h3 className="font-semibold">Poslední zápisy</h3>{recent.length === 0 ? <p className="text-sm text-slate-500">Bez záznamů.</p> : recent.map((r) => <p key={r.id} className="text-sm">{getPracticeStatusLabel(r.status)} · {r.supervisor.fullName}</p>)}</Card>
-      <Card className="md:col-span-2 xl:col-span-4"><h3 className="font-semibold">Statistiky stavů</h3><div className="mt-2 grid gap-2 md:grid-cols-3">{stats.map((s) => <p key={s.status} className="rounded-md bg-slate-50 p-2 text-sm">{getPracticeStatusLabel(s.status)}: <strong>{s._count.status}</strong></p>)}</div></Card>
+      <Card className="md:col-span-2"><h3 className="font-semibold">Poslední zápisy</h3>{recent.length === 0 ? <p className="text-sm text-slate-500">Bez záznamů.</p> : recent.map((r: (typeof recent)[number]) => <p key={r.id} className="text-sm">{getPracticeStatusLabel(r.status)} · {r.supervisor.fullName}</p>)}</Card>
+      <Card className="md:col-span-2 xl:col-span-4"><h3 className="font-semibold">Statistiky stavů</h3><div className="mt-2 grid gap-2 md:grid-cols-3">{stats.map((s: (typeof stats)[number]) => <p key={s.status} className="rounded-md bg-slate-50 p-2 text-sm">{getPracticeStatusLabel(s.status)}: <strong>{s._count.status}</strong></p>)}</div></Card>
     </div>;
   }
 
