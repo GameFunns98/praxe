@@ -10,7 +10,8 @@ const errorMap: Record<string, string> = {
   AwaitingApproval: 'Účet byl vytvořen, ale čeká na aktivaci administrátorem. Kontaktujte admin tým.',
   AccountDisabled: 'Účet je deaktivovaný. Kontaktujte administrátora.',
   DiscordEmailMissing: 'Discord účet nemá dostupný email. Nelze vytvořit přihlášení.',
-  ForcePasswordReset: 'Účet vyžaduje reset hesla před dalším použitím.'
+  ForcePasswordReset: 'Účet vyžaduje reset hesla před dalším použitím.',
+  TooManyAttempts: 'Příliš mnoho pokusů o přihlášení. Zkuste to za chvíli znovu.'
 };
 
 export function LoginPageClient({ callbackError }: { callbackError?: string }) {

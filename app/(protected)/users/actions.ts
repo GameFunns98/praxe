@@ -6,6 +6,8 @@ import { Roles, type Role } from '@/lib/auth/roles';
 import { requireSession } from '@/lib/auth/session';
 import { prisma } from '@/lib/prisma';
 import { logAudit } from '@/lib/services/audit';
+import { createPasswordResetToken } from '@/lib/auth/password-reset';
+import { sendPasswordResetEmail } from '@/lib/services/email';
 
 async function requireAdmin() {
   const session = await requireSession();
@@ -87,6 +89,22 @@ export async function disconnectDiscordAccount(formData: FormData) {
   revalidatePath(`/users/${userId}`);
 }
 
+
+
+export async function sendResetLinkToUser(formData: FormData) {
+  const session = await requireAdmin();
+  const userId = String(formData.get('userId'));
+  const user = await prisma.user.findUnique({ where: { id: userId } });
+  if (!user) throw new Error('Uživatel nenalezen.');
+
+  const reset = await createPasswordResetToken(user.email);
+  if (!reset) throw new Error('Reset token nelze vytvořit.');
+
+  const resetUrl = `${process.env.NEXTAUTH_URL ?? ''}/reset-password?token=${reset.rawToken}`;
+  const delivered = await sendPasswordResetEmail({ to: user.email, resetUrl });
+  await logAudit(session.user.id, 'User', userId, 'PASSWORD_RESET_LINK_SENT', undefined, { delivered: delivered.delivered });
+  revalidatePath(`/users/${userId}`);
+}
 
 export async function approvePendingUser(formData: FormData) {
   const session = await requireAdmin();

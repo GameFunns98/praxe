@@ -7,6 +7,7 @@ import {
   approvePendingUser,
   disconnectDiscordAccount,
   forcePasswordResetNextLogin,
+  sendResetLinkToUser,
   setTemporaryPassword,
   setUserActive,
   updateUserRole
@@ -75,6 +76,12 @@ export default async function UserDetailPage({ params }: { params: Promise<{ id:
         <p className="font-medium">Dočasné heslo</p>
         <input name="tempPassword" minLength={8} required className="w-full rounded border px-2 py-1" placeholder="Nové dočasné heslo" />
         <button className="rounded border px-3 py-1">Nastavit dočasné heslo</button>
+      </form>
+
+      <form action={sendResetLinkToUser} className="space-y-2">
+        <input type="hidden" name="userId" value={user.id} />
+        <p className="font-medium">Reset link emailem</p>
+        <button className="rounded border px-3 py-1">Poslat reset link</button>
       </form>
 
       <form action={forcePasswordResetNextLogin} className="space-y-2">

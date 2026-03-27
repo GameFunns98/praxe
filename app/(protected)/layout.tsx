@@ -15,6 +15,7 @@ const links: NavLink[] = [
   { label: 'Pozdní zápisy', href: '/late', allowedRoles: [Roles.ADMIN] },
   { label: 'Poznámky', href: '/notes' },
   { label: 'Uživatelé', href: '/users', allowedRoles: [Roles.ADMIN] },
+  { label: 'Pending účty', href: '/users/pending', allowedRoles: [Roles.ADMIN] },
   { label: 'Reporty', href: '/reports', allowedRoles: [Roles.ADMIN] },
   { label: 'Audit', href: '/audit', allowedRoles: [Roles.ADMIN] },
   { label: 'Nastavení', href: '/settings', allowedRoles: [Roles.ADMIN] }
