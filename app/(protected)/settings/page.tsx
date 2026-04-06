@@ -1,6 +1,6 @@
 import { Roles } from '@/lib/auth/roles';
 import { requireSession } from '@/lib/auth/session';
-import { getDiscordSettings, getGuildChannels, getSharedGuildsForAdmin } from '@/lib/services/discord';
+import { getDiscordHealthStatus, getDiscordSettings, getGuildChannels, getSharedGuildsForAdmin } from '@/lib/services/discord';
 import { saveDiscordSettingsAction, sendDiscordTestAction } from './actions';
 
 export default async function SettingsPage({ searchParams }: { searchParams: Promise<Record<string, string | string[] | undefined>> }) {
@@ -11,6 +11,7 @@ export default async function SettingsPage({ searchParams }: { searchParams: Pro
   if (session.user.role !== Roles.ADMIN) return <p>Přístup pouze pro admin.</p>;
 
   const settings = await getDiscordSettings();
+  const health = await getDiscordHealthStatus();
   const guilds = session.user.discordAccessToken ? await getSharedGuildsForAdmin(session.user.discordAccessToken) : [];
   const activeGuildId = selectedGuildId || settings?.guildId || guilds[0]?.id || '';
   const channels = activeGuildId ? await getGuildChannels(activeGuildId) : [];
@@ -60,6 +61,25 @@ export default async function SettingsPage({ searchParams }: { searchParams: Pro
       <form action={sendDiscordTestAction}>
         <button className="rounded border px-3 py-1">Odeslat test notifikace</button>
       </form>
+    </section>
+
+
+    <section className="max-w-3xl space-y-2 rounded-xl border bg-white p-4">
+      <h2 className="font-semibold">Stav Discord integrace</h2>
+      <div className="flex flex-wrap gap-2 text-xs">
+        <span className={`rounded-full px-3 py-1 ${health.primaryReady ? 'bg-green-100 text-green-800' : 'bg-amber-100 text-amber-800'}`}>
+          Primární bot: {health.primaryReady ? 'Připraveno' : 'Nekompletní'}
+        </span>
+        <span className={`rounded-full px-3 py-1 ${health.fallbackReady ? 'bg-blue-100 text-blue-800' : 'bg-slate-100 text-slate-700'}`}>
+          Webhook fallback: {health.fallbackReady ? 'Připraveno' : 'Nenastaveno'}
+        </span>
+      </div>
+      <ul className="grid gap-1 text-xs text-slate-600 sm:grid-cols-2">
+        <li>Bot token: {health.hasBotToken ? '✅ OK' : '⚠️ chybí'}</li>
+        <li>Guild: {health.hasGuild ? '✅ OK' : '⚠️ chybí'}</li>
+        <li>Approval channel: {health.hasApprovalChannel ? '✅ OK' : '⚠️ chybí'}</li>
+        <li>Rejection channel: {health.hasRejectionChannel ? '✅ OK' : '⚠️ chybí'}</li>
+      </ul>
     </section>
 
     <section className="max-w-3xl space-y-2 rounded-xl border bg-white p-4">

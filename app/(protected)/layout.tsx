@@ -1,20 +1,29 @@
 import Link from 'next/link';
 import { requireSession } from '@/lib/auth/session';
+import { Roles, type Role } from '@/lib/auth/roles';
 
-const links: [string, string][] = [
-  ['Dashboard', '/dashboard'],
-  ['Praxe', '/practice'],
-  ['Nový zápis', '/practice/new'],
-  ['Pozdní zápisy', '/late'],
-  ['Poznámky', '/notes'],
-  ['Uživatelé', '/users'],
-  ['Reporty', '/reports'],
-  ['Audit', '/audit'],
-  ['Nastavení', '/settings']
+type NavLink = {
+  label: string;
+  href: string;
+  allowedRoles?: Role[];
+};
+
+const links: NavLink[] = [
+  { label: 'Dashboard', href: '/dashboard' },
+  { label: 'Praxe', href: '/practice' },
+  { label: 'Nový zápis', href: '/practice/new', allowedRoles: [Roles.TRAINEE] },
+  { label: 'Pozdní zápisy', href: '/late', allowedRoles: [Roles.ADMIN] },
+  { label: 'Poznámky', href: '/notes' },
+  { label: 'Uživatelé', href: '/users', allowedRoles: [Roles.ADMIN] },
+  { label: 'Pending účty', href: '/users/pending', allowedRoles: [Roles.ADMIN] },
+  { label: 'Reporty', href: '/reports', allowedRoles: [Roles.ADMIN] },
+  { label: 'Audit', href: '/audit', allowedRoles: [Roles.ADMIN] },
+  { label: 'Nastavení', href: '/settings', allowedRoles: [Roles.ADMIN] }
 ];
 
 export default async function ProtectedLayout({ children }: { children: React.ReactNode }) {
   const session = await requireSession();
+  const visibleLinks = links.filter((link) => !link.allowedRoles || link.allowedRoles.includes(session.user.role));
 
   return (
     <div className="min-h-screen bg-slate-50">
@@ -30,9 +39,9 @@ export default async function ProtectedLayout({ children }: { children: React.Re
           <a href="/api/auth/signout" className="rounded-md border border-slate-300 bg-white px-3 py-1.5 text-sm hover:bg-slate-50">Odhlásit</a>
         </div>
         <nav className="mx-auto mt-3 flex max-w-7xl flex-wrap gap-2 text-sm">
-          {links.map(([label, href]) => (
-            <Link key={href} href={href} className="rounded-md border border-slate-200 bg-slate-50 px-3 py-1.5 text-slate-700 transition hover:bg-slate-100">
-              {label}
+          {visibleLinks.map((link) => (
+            <Link key={link.href} href={link.href} className="rounded-md border border-slate-200 bg-slate-50 px-3 py-1.5 text-slate-700 transition hover:bg-slate-100">
+              {link.label}
             </Link>
           ))}
         </nav>

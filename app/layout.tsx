@@ -1,6 +1,7 @@
 import './globals.css';
 import { Providers } from './providers';
 import type { Metadata } from 'next';
+import { Analytics } from '@vercel/analytics/next';
 
 export const metadata: Metadata = {
   title: 'Systém zápisu praxí',
@@ -12,6 +13,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="cs">
       <body>
         <Providers>{children}</Providers>
+        <Analytics />
       </body>
     </html>
   );

@@ -56,6 +56,26 @@ export async function getDiscordSettings() {
   return prisma.discordSettings.findFirst({ orderBy: { createdAt: 'asc' } });
 }
 
+export async function getDiscordHealthStatus() {
+  const settings = await getDiscordSettings();
+  const hasBotToken = Boolean(process.env.DISCORD_BOT_TOKEN);
+  const hasWebhook = Boolean(process.env.DISCORD_WEBHOOK_URL);
+
+  const health = {
+    hasBotToken,
+    hasWebhook,
+    hasGuild: Boolean(settings?.guildId),
+    hasApprovalChannel: Boolean(settings?.approvalChannelId),
+    hasRejectionChannel: Boolean(settings?.rejectionChannelId)
+  };
+
+  return {
+    ...health,
+    primaryReady: health.hasBotToken && health.hasGuild && health.hasApprovalChannel && health.hasRejectionChannel,
+    fallbackReady: health.hasWebhook
+  };
+}
+
 export async function getSharedGuildsForAdmin(discordAccessToken: string) {
   const token = process.env.DISCORD_BOT_TOKEN;
   if (!token || !discordAccessToken) return [];

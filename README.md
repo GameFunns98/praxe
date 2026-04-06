@@ -34,6 +34,8 @@ DISCORD_CLIENT_SECRET=
 DISCORD_BOT_TOKEN=
 DISCORD_REDIRECT_URI=
 DISCORD_WEBHOOK_URL=   # optional fallback only
+RESEND_API_KEY=
+PASSWORD_RESET_FROM_EMAIL=
 ```
 
 ## Authentication architecture
@@ -78,3 +80,8 @@ Pokud není uložená bot konfigurace nebo odeslání botem selže, aplikace se 
 ## Migrations + seed
 - Vždy commitujte `prisma/schema.prisma` a `prisma/migrations/*`.
 - Seed vytváří 1 lokálního superadmina a ostatní uživatele s `DISCORD` auth providerem.
+
+
+## Password reset email
+- Pokud jsou nastavené `RESEND_API_KEY` a `PASSWORD_RESET_FROM_EMAIL`, reset link se odešle emailem přes Resend.
+- Pokud env chybí, aplikace bezpečně fallbackne na server log (pro dev/test).

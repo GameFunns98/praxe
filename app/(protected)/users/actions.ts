@@ -6,11 +6,42 @@ import { Roles, type Role } from '@/lib/auth/roles';
 import { requireSession } from '@/lib/auth/session';
 import { prisma } from '@/lib/prisma';
 import { logAudit } from '@/lib/services/audit';
+import { createPasswordResetToken } from '@/lib/auth/password-reset';
+import { sendPasswordResetEmail } from '@/lib/services/email';
 
 async function requireAdmin() {
   const session = await requireSession();
   if (session.user.role !== Roles.ADMIN) throw new Error('Pouze admin.');
   return session;
+}
+
+
+export async function updateUserProfile(formData: FormData) {
+  const session = await requireAdmin();
+  const userId = String(formData.get('userId'));
+  const user = await prisma.user.findUnique({ where: { id: userId } });
+  if (!user) throw new Error('Uživatel nenalezen.');
+
+  const payload = {
+    fullName: String(formData.get('fullName') ?? '').trim(),
+    callsign: String(formData.get('callsign') ?? '').trim(),
+    rankTitle: String(formData.get('rankTitle') ?? '').trim(),
+    email: String(formData.get('email') ?? '').trim().toLowerCase(),
+    role: String(formData.get('role') ?? user.role) as Role,
+    active: String(formData.get('active')) === 'true',
+    authProvider: String(formData.get('authProvider') ?? user.authProvider) as 'LOCAL' | 'DISCORD' | 'HYBRID',
+    discordUsername: String(formData.get('discordUsername') ?? '').trim() || null,
+    discordGlobalName: String(formData.get('discordGlobalName') ?? '').trim() || null
+  };
+
+  if (!payload.fullName || !payload.callsign || !payload.rankTitle || !payload.email) {
+    throw new Error('Jméno, callsign, hodnost a email jsou povinné.');
+  }
+
+  await prisma.user.update({ where: { id: userId }, data: payload });
+  await logAudit(session.user.id, 'User', userId, 'PROFILE_UPDATE', user, payload);
+  revalidatePath('/users');
+  revalidatePath(`/users/${userId}`);
 }
 
 export async function updateUserRole(formData: FormData) {
@@ -87,6 +118,22 @@ export async function disconnectDiscordAccount(formData: FormData) {
   revalidatePath(`/users/${userId}`);
 }
 
+
+
+export async function sendResetLinkToUser(formData: FormData) {
+  const session = await requireAdmin();
+  const userId = String(formData.get('userId'));
+  const user = await prisma.user.findUnique({ where: { id: userId } });
+  if (!user) throw new Error('Uživatel nenalezen.');
+
+  const reset = await createPasswordResetToken(user.email);
+  if (!reset) throw new Error('Reset token nelze vytvořit.');
+
+  const resetUrl = `${process.env.NEXTAUTH_URL ?? ''}/reset-password?token=${reset.rawToken}`;
+  const delivered = await sendPasswordResetEmail({ to: user.email, resetUrl });
+  await logAudit(session.user.id, 'User', userId, 'PASSWORD_RESET_LINK_SENT', undefined, { delivered: delivered.delivered });
+  revalidatePath(`/users/${userId}`);
+}
 
 export async function approvePendingUser(formData: FormData) {
   const session = await requireAdmin();

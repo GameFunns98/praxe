@@ -4,6 +4,7 @@ import bcrypt from 'bcryptjs';
 import type { NextAuthOptions } from 'next-auth';
 import CredentialsProvider from 'next-auth/providers/credentials';
 import DiscordProvider from 'next-auth/providers/discord';
+import { hitRateLimit } from '@/lib/security/rate-limit';
 
 const DISCORD_SCOPE = 'identify email guilds';
 
@@ -32,6 +33,13 @@ export const authOptions: NextAuthOptions = {
       },
       async authorize(credentials) {
         if (!credentials?.email || !credentials.password) return null;
+
+        const guard = hitRateLimit(`login:${credentials.email.toLowerCase()}`, 8, 10 * 60 * 1000);
+        if (guard.blocked) {
+          console.warn('[Auth] Local login rate limited', { email: credentials.email });
+          return null;
+        }
+
         const user = await prisma.user.findUnique({ where: { email: credentials.email } });
         if (!user || !user.active || !user.isSuperadmin) return null;
         const ok = await bcrypt.compare(credentials.password, user.passwordHash);
@@ -75,6 +83,12 @@ export const authOptions: NextAuthOptions = {
       if (!email) {
         console.warn('[Auth] Discord login failed: missing email in profile', { discordUserId });
         return '/login?error=DiscordEmailMissing';
+      }
+
+      const discordGuard = hitRateLimit(`discord:${email}`, 20, 10 * 60 * 1000);
+      if (discordGuard.blocked) {
+        console.warn('[Auth] Discord login rate limited', { email });
+        return '/login?error=TooManyAttempts';
       }
 
       const existingByDiscord = await prisma.user.findUnique({ where: { discordUserId } });
