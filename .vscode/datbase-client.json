@@ -1,0 +1,44 @@
+{
+    "database.connections": {
+        "1775483315405": {
+            "host": "ep-dark-haze-a4ijq039-pooler.us-east-1.aws.neon.tech",
+            "dbPath": "",
+            "port": "5432",
+            "user": "neondb_owner",
+            "authType": "default",
+            "password": "npg_zGsnMwf34TpE",
+            "encoding": "utf8",
+            "clientKeyPath": null,
+            "clientCertPath": null,
+            "caPath": null,
+            "database": "neondb",
+            "useSSL": true,
+            "usingSSH": false,
+            "showHidden": false,
+            "includeDatabases": null,
+            "dbType": "PostgreSQL",
+            "encrypt": false,
+            "isCluster": false,
+            "connectionUrl": "postgresql://neondb_owner:npg_zGsnMwf34TpE@ep-dark-haze-a4ijq039-pooler.us-east-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require",
+            "srv": false,
+            "esAuth": "none",
+            "global": false,
+            "key": "1775483315405",
+            "timezone": "+00:00",
+            "ssh": {
+                "host": "",
+                "privateKeyPath": "C:\\Users\\vasek\\.ssh\\id_rsa",
+                "port": 22,
+                "username": "root",
+                "type": "password",
+                "connectTimeout": 10000,
+                "algorithms": {
+                    "cipher": []
+                }
+            },
+            "name": "Databse",
+            "useConnectionString": true,
+            "connectionKey": "database.connections"
+        }
+    }
+}

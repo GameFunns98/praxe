@@ -124,7 +124,7 @@ export const authOptions: NextAuthOptions = {
           email,
           passwordHash: await bcrypt.hash(crypto.randomUUID(), 10),
           role: 'TRAINEE',
-          active: false,
+          active: true,
           authProvider: 'DISCORD',
           discordUserId,
           discordUsername: discordProfile.username,
@@ -133,8 +133,8 @@ export const authOptions: NextAuthOptions = {
         }
       });
 
-      console.info('[Auth] Discord login created pending user awaiting activation', { email, discordUserId });
-      return '/login?error=AwaitingApproval';
+      console.info('[Auth] Discord login created active user with TRAINEE role', { email, discordUserId });
+      return true;
     },
     async jwt({ token, user, account }) {
       if (user?.id) {
